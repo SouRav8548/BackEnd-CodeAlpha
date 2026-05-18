@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>✨ URL Shortener | Make long links short</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 600px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 2em;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 0.9em;
+      }
+
+      input {
+        width: 100%;
+        padding: 15px;
+        font-size: 16px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        transition: border-color 0.3s;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      button {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .result {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f7f7f7;
+        border-radius: 10px;
+        display: none;
+      }
+
+      .result.show {
+        display: block;
+        animation: slideIn 0.5s ease;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .result h3 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .short-link {
+        background: white;
+        padding: 10px;
+        border-radius: 8px;
+        word-break: break-all;
+        margin: 10px 0;
+      }
+
+      .short-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      .short-link a:hover {
+        text-decoration: underline;
+      }
+
+      .copy-btn {
+        background: #28a745;
+        margin-top: 10px;
+        padding: 10px;
+        font-size: 14px;
+      }
+
+      .copy-btn:hover {
+        background: #218838;
+      }
+
+      .error {
+        background: #fee;
+        color: #c33;
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 15px;
+      }
+
+      .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .footer {
+        margin-top: 30px;
+        text-align: center;
+        color: #999;
+        font-size: 12px;
+      }
+
+      .admin-link {
+        color: #999;
+        text-decoration: none;
+      }
+
+      .admin-link:hover {
+        color: #667eea;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔗 URL Shortener</h1>
+      <div class="subtitle">
+        Paste a long URL and get a short link in seconds!
+      </div>
+
+      <input
+        type="text"
+        id="longUrl"
+        placeholder="https://www.example.com/very/long/url/that/is/hard/to/share"
+      />
+      <button onclick="shortenUrl()" id="shortenBtn">✨ Shorten URL</button>
+
+      <div id="result" class="result"></div>
+
+      <div class="footer">
+        <a href="/admin/links" class="admin-link" target="_blank"
+          >📊 View all links</a
+        >
+      </div>
+    </div>
+
+    <script>
+      async function shortenUrl() {
+        const longUrlInput = document.getElementById("longUrl");
+        const longUrl = longUrlInput.value.trim();
+        const resultDiv = document.getElementById("result");
+        const button = document.getElementById("shortenBtn");
+
+        // Clear previous result
+        resultDiv.className = "result";
+        resultDiv.innerHTML = "";
+
+        // Validate input
+        if (!longUrl) {
+          showError("Please enter a URL!");
+          return;
+        }
+
+        // Show loading state
+        const originalButtonText = button.innerHTML;
+        button.innerHTML = 'Shortening... <span class="loading"></span>';
+        button.disabled = true;
+
+        try {
+          // Send request to our server
+          const response = await fetch("/shorten", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ long_url: longUrl }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            // Success - show the short URL
+            showSuccess(data.short_url, data.short_code);
+            longUrlInput.value = ""; // Clear input
+          } else {
+            // Error from server
+            showError(data.error || "Something went wrong. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          showError(
+            "Cannot connect to server. Make sure the server is running!",
+          );
+        } finally {
+          // Reset button
+          button.innerHTML = originalButtonText;
+          button.disabled = false;
+        }
+      }
+
+      function showSuccess(shortUrl, shortCode) {
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = `
+                <h3>✅ Success! Your short link:</h3>
+                <div class="short-link">
+                    <a href="${shortUrl}" target="_blank">${shortUrl}</a>
+                </div>
+                <button class="copy-btn" onclick="copyToClipboard('${shortUrl}')">
+                    📋 Copy to clipboard
+                </button>
+                <p style="margin-top: 15px; font-size: 12px; color: #666;">
+                    Short code: <strong>${shortCode}</strong>
+                </p>
+            `;
+        resultDiv.className = "result show";
+      }
+
+      function showError(message) {
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = `
+                <div class="error">
+                    ❌ ${message}
+                </div>
+            `;
+        resultDiv.className = "result show";
+      }
+
+      async function copyToClipboard(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          alert("✅ Copied to clipboard!");
+        } catch (err) {
+          alert("Please copy manually: " + text);
+        }
+      }
+
+      // Allow pressing Enter key to submit
+      document
+        .getElementById("longUrl")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            shortenUrl();
+          }
+        });
+    </script>
+  </body>
+</html>

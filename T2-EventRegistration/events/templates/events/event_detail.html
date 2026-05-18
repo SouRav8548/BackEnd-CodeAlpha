@@ -1,0 +1,59 @@
+{% extends 'events/base.html' %} {% block content %}
+<div class="event-detail">
+  <h1>{{ event.title }}</h1>
+
+  <div class="event-meta">
+    <p>
+      <strong>📅 Date & Time:</strong> {{ event.date|date:"F d, Y - h:i A" }}
+    </p>
+    <p><strong>📍 Location:</strong> {{ event.location }}</p>
+    <p><strong>👥 Capacity:</strong> {{ event.capacity }} people</p>
+    <p>
+      <strong>📊 Registered:</strong> {{ registration_count }} /
+      {{event.capacity }}
+    </p>
+    <p><strong>🎟️ Spots Left:</strong> {{ spots_left }}</p>
+  </div>
+
+  <div style="margin: 1.5rem 0">
+    <h3>Description</h3>
+    <p>{{ event.description }}</p>
+  </div>
+
+  <div
+    class="registration-status {% if is_registered %}registered{% else %}not-registered{% endif %}"
+  >
+    {% if user.is_authenticated %} {% if is_registered %}
+    <h3>✅ You are registered!</h3>
+    <p>You're all set for this event. See you there!</p>
+    <a
+      href="{% url 'cancel_registration' event.id %}"
+      class="btn btn-danger"
+      onclick="return confirm('Are you sure you want to cancel?');"
+    >
+      Cancel Registration
+    </a>
+    {% else %} {% if spots_left > 0 %}
+    <h3>Interested in this event?</h3>
+    <p>Spots are available! Register now to secure your place.</p>
+    <a href="{% url 'register' event.id %}" class="btn btn-success"
+      >Register Now</a
+    >
+    {% else %}
+    <h3>😔 Event Full</h3>
+    <p>Sorry, all spots are taken. Check other events!</p>
+    {% endif %} {% endif %} {% else %}
+    <h3>Want to join?</h3>
+    <p>
+      Please <a href="{% url 'login' %}">login</a> or
+      <a href="{% url 'register' %}">create an account</a> to register for this
+      event.
+    </p>
+    {% endif %}
+  </div>
+
+  <div style="margin-top: 1.5rem">
+    <a href="{% url 'event_list' %}">← Back to all events</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,157 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Tasty Bites Restaurant</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff8f0;
+      }
+      h1 {
+        color: #c0392b;
+        text-align: center;
+      }
+      .section {
+        background: white;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      button {
+        background-color: #e67e22;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background-color: #d35400;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🍽️ Welcome to Tasty Bites! 🍽️</h1>
+
+    <div class="section">
+      <h2>Today's Menu</h2>
+      <button onclick="loadMenu()">Show Menu</button>
+      <div id="menu-display"></div>
+    </div>
+
+    <div class="section">
+      <h2>Table Availability</h2>
+      <button onclick="checkTables()">Check Tables</button>
+      <div id="table-display"></div>
+    </div>
+
+    <div class="section">
+      <h2>Place an Order</h2>
+      <button onclick="showOrderForm()">New Order</button>
+      <div id="order-form" style="display: none">
+        <p>
+          <label>Customer Name:</label>
+          <input type="text" id="customer-name" />
+        </p>
+        <p>
+          <label>Table ID:</label>
+          <input type="number" id="table-id" value="1" />
+        </p>
+        <p>
+          <label>Menu Item ID:</label>
+          <input type="number" id="menu-item-id" value="1" />
+        </p>
+        <p>
+          <label>Quantity:</label>
+          <input type="number" id="quantity" value="1" />
+        </p>
+        <button onclick="placeOrder()">Submit Order</button>
+      </div>
+      <div id="order-result"></div>
+    </div>
+
+    <script>
+      function loadMenu() {
+        fetch("/api/menu/")
+          .then((response) => response.json())
+          .then((data) => {
+            let html =
+              "<table><tr><th>Name</th><th>Description</th><th>Price</th><th>Category</th></tr>";
+            data.menu.forEach((item) => {
+              html += `<tr>
+                            <td>${item.name}</td>
+                            <td>${item.description}</td>
+                            <td>$${item.price}</td>
+                            <td>${item.category}</td>
+                        </tr>`;
+            });
+            html += "</table>";
+            document.getElementById("menu-display").innerHTML = html;
+          });
+      }
+
+      function checkTables() {
+        fetch("/api/tables/")
+          .then((response) => response.json())
+          .then((data) => {
+            let html =
+              "<table><tr><th>Table</th><th>Capacity</th><th>Available</th></tr>";
+            data.tables.forEach((table) => {
+              html += `<tr>
+                            <td>${table.table_number}</td>
+                            <td>${table.capacity} people</td>
+                            <td>${table.is_available ? "✅ Yes" : "❌ No"}</td>
+                        </tr>`;
+            });
+            html += "</table>";
+            document.getElementById("table-display").innerHTML = html;
+          });
+      }
+
+      function showOrderForm() {
+        document.getElementById("order-form").style.display = "block";
+      }
+
+      function placeOrder() {
+        const orderData = {
+          customer_name: document.getElementById("customer-name").value,
+          table_id: parseInt(document.getElementById("table-id").value),
+          items: [
+            {
+              menu_item_id: parseInt(
+                document.getElementById("menu-item-id").value,
+              ),
+              quantity: parseInt(document.getElementById("quantity").value),
+            },
+          ],
+        };
+
+        fetch("/api/orders/create/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderData),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("order-result").innerHTML =
+              `<p style="color: green;">✅ ${data.message} Total: $${data.total}</p>`;
+          });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+{% extends 'events/base.html' %} {% block content %}
+<h1>Upcoming Events</h1>
+<p style="color: #666; margin-bottom: 1.5rem">
+  Browse and register for exciting events!
+</p>
+
+{% for event in events %}
+<div class="event-card">
+  <h2>
+    <a href="{% url 'event_detail' event.id %}">{{ event.title }}</a>
+  </h2>
+  <p>📅 {{ event.date|date:"F d, Y - h:i A" }}</p>
+  <p>📍 {{ event.location }}</p>
+  <p>{{ event.description|truncatewords:30 }}</p>
+  <a href="{% url 'event_detail' event.id %}" class="btn">View Details</a>
+</div>
+{% empty %}
+<div class="event-card" style="text-align: center">
+  <p>No events available right now. Check back later!</p>
+</div>
+{% endfor %} {% endblock %}

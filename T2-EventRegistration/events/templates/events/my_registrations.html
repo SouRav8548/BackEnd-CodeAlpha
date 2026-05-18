@@ -1,0 +1,32 @@
+{% extends 'events/base.html' %} {% block content %}
+<h1>My Registrations</h1>
+
+{% for registration in registrations %}
+<div class="event-card">
+  <h2>
+    <a href="{% url 'event_detail' registration.event.id %}"
+      >{{ registration.event.title }}</a
+    >
+  </h2>
+  <p>📅 {{ registration.event.date|date:"F d, Y - h:i A" }}</p>
+  <p>📍 {{ registration.event.location }}</p>
+  <p>📝 Registered on: {{ registration.registered_at|date:"F d, Y" }}</p>
+  <a href="{% url 'event_detail' registration.event.id %}" class="btn"
+    >View Details</a
+  >
+  <a
+    href="{% url 'cancel_registration' registration.event.id %}"
+    class="btn btn-danger"
+    onclick="
+      return confirm('Are you sure you want to cancel this registration?');
+    "
+  >
+    Cancel
+  </a>
+</div>
+{% empty %}
+<div class="event-card" style="text-align: center">
+  <p>You haven't registered for any events yet.</p>
+  <a href="{% url 'event_list' %}" class="btn">Browse Events</a>
+</div>
+{% endfor %} {% endblock %}
