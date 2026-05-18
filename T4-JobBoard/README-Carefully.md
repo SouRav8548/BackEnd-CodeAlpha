@@ -11,6 +11,7 @@ A full-featured Job Board Platform backend built with Django and Django REST Fra
 
 ## 📁 Project Structure
 
+```bash
 job_board_project/
 │
 ├── manage.py # Django management script
@@ -47,6 +48,7 @@ job_board_project/
 │ └── applications.png
 │
 └── venv/ # Virtual environment (not in repo)
+```
 
 ---
 
